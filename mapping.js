@@ -8,7 +8,7 @@ var Mapping;
         var heatMap;
         function GoogleMap(mapDiv, data, type) {
 
-            var devs = data;
+            // var devs = data;
             var lats = [], longs = [];
             var center;
             // devs.map(function (value) {
@@ -26,8 +26,8 @@ var Mapping;
             map = new google.maps.Map(mapDiv, this.options);
 
  
-            map.data.loadGeoJson(
-                'https://storage.googleapis.com/mapsdevsite/json/google.json');
+            // map.data.loadGeoJson(
+            //     'https://storage.googleapis.com/mapsdevsite/json/google.json');
 
             // map.data.loadGeoJson(
             //     './portland.geo.json');
