@@ -11,10 +11,10 @@ var Mapping;
             var devs = data;
             var lats = [], longs = [];
             var center;
-            devs.map(function (value) {
-                lats.push(value.latitude);
-                longs.push(value.longitude);
-            });
+            // devs.map(function (value) {
+            //     lats.push(value.latitude);
+            //     longs.push(value.longitude);
+            // });
 
             this.name = "GoogleMap";
             this.options = {
@@ -32,7 +32,7 @@ var Mapping;
             // map.data.loadGeoJson(
             //     './portland.geo.json');
 
-            // this.addHeatMapLayer(data, map);
+            this.addHeatMapLayer(data, map);
             // this.addBarHeatMapLayer(data, map);
         }
 
