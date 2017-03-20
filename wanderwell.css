@@ -8,6 +8,25 @@
     color: white;
 }
 
+/* d3 js overlay */
+.points,
+.points svg {
+    position: absolute;
+}
+
+.points svg {
+    width: 60px;
+    height: 20px;
+    padding-right: 100px;
+    font: 10px sans-serif;
+}
+
+.points circle {
+    fill: brown;
+    stroke: black;
+    stroke-width: 1.5px;
+}
+
 .nav-tabs>li.active>a, .nav-tabs>li.active>a:focus,
 .nav>li>a:focus, .nav>li>a:hover{
 	background-color: #3097d1;
@@ -90,4 +109,6 @@
     height: 20px;
 
 }
+
+
 

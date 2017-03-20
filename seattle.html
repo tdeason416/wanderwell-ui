@@ -19,53 +19,13 @@
     </style>
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+    <script type="text/javascript" src="hexbin.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=visualization&key=AIzaSyDu_tKdnFNkskLlZY4EeVcXQ0QdfRDGIOk"></script>
     <script type="text/javascript" src="mapping.js"></script>
 
-    <script type="text/javascript">
-        $(function () {
-            var googleMap;
-            $("#slider1").slider({
-                range: "max",
-                min: 0,
-                max: 10,
-                value: 0,
-                slide: function (event, ui) {
-                    $("#amount1").val(ui.value);
-                    googleMap.setOpacity(ui.value * 0.1);
-                }
-            });
-            $("#slider2").slider({
-                range: "max",
-                min: 0,
-                max: 10,
-                value: 0,
-                slide: function (event, ui) {
-                    $("#amount2").val(ui.value);
-                }
-            });
-            $("#slider3").slider({
-                range: "max",
-                min: 0,
-                max: 10,
-                value: 0,
-                slide: function (event, ui) {
-                    $("#amount3").val(ui.value);
-                }
-            });
-            // var mapCanvasCount = document.getElementById("mapDev");
-            //    googleMap= new Mapping.GoogleMap(mapCanvasCount, data, 'heat');
-
-            // $.get("data/devs.json", function (data, status) {
-            //     var mapCanvasCount = document.getElementById("mapDev");
-            //     googleMap = new Mapping.GoogleMap(mapCanvasCount, data, 'heat');
-            // });
-            data = "";
-            var mapCanvasCount = document.getElementById("mapDev");
-            googleMap = new Mapping.GoogleMap(mapCanvasCount, data, 'heat');
-        });
-    </script>
 </head>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 <link rel="stylesheet" href="wanderwell.css">
@@ -118,6 +78,200 @@
     </div>
 
 
+    <script type="text/javascript">
+        var googleMap;
+
+        $(function () {
+            $("#slider1").slider({
+                range: "max",
+                min: 0,
+                max: 10,
+                value: 0,
+                slide: function (event, ui) {
+                    $("#amount1").val(ui.value);
+                    googleMap.setOpacity(ui.value * 0.1);
+                }
+            });
+            $("#slider2").slider({
+                range: "max",
+                min: 0,
+                max: 10,
+                value: 0,
+                slide: function (event, ui) {
+                    $("#amount2").val(ui.value);
+                }
+            });
+            $("#slider3").slider({
+                range: "max",
+                min: 0,
+                max: 10,
+                value: 0,
+                slide: function (event, ui) {
+                    $("#amount3").val(ui.value);
+                }
+            });
+
+            data = "";
+            var mapCanvasCount = document.getElementById("mapDev");
+            // googleMap = new Mapping.GoogleMap(mapCanvasCount, data, 'heat');
+        });
+
+        // Create the Google Map…
+        var map = new google.maps.Map(d3.select("#mapDev").node(), {
+            zoom: 12,
+            center: new google.maps.LatLng(47.6105034678, -122.355217643),
+            // mapTypeId: google.maps.MapTypeId.TERRAIN
+        });
+
+        // Load the data. When the data comes back, create an overlay.
+        d3.json("./seattle-grid.json", function (data) {
+            var overlay = new google.maps.OverlayView();
+
+            console.log(data);
+            // Add the container when the overlay is added to the map.
+            overlay.onAdd = function () {
+                var layer = d3.select(this.getPanes().overlayLayer).append("div")
+                    .attr("class", "points");
+
+                var svg = d3.select(this.getPanes().overlayLayer)
+                    .append('svg')
+                    .attr("class", "hex");
+
+                var levels = {};
+                var curLevel = false;
+
+
+                // Draw each marker as a separate SVG element.
+                // We could use a single SVG, but what size would it have?
+                overlay.draw = function () {
+                    var projection = this.getProjection(),
+                        padding = 10;
+
+                    var marker = layer.selectAll("svg")
+                        .data(d3.entries(data))
+                        .each(transform) // update existing markers
+                        .enter().append("svg:svg")
+                        .each(transform)
+                        .attr("class", "marker");
+
+                    // // // Add a circle.
+                    // marker.append("svg:circle")
+                    //     .attr("r", 4.5)
+                    //     .attr("cx", padding)
+                    //     .attr("cy", padding);
+
+                    // // Add a label.
+                    // marker.append("svg:text")
+                    //     .attr("x", padding + 7)
+                    //     .attr("y", padding)
+                    //     .attr("dy", ".31em")
+                    //     .text(function (d) { return d.key; });
+
+                    function transform(d) {
+                        d = new google.maps.LatLng(d.value[1], d.value[0]);
+                        d = projection.fromLatLngToDivPixel(d);
+                        return d3.select(this)
+                            .style("left", (d.x - padding) + "px")
+                            .style("top", (d.y - padding) + "px");
+
+                    }
+
+                    zzz = new google.maps.LatLng(36.98, -120.12);
+                    zzz = projection.fromLatLngToDivPixel(zzz);
+
+                    var hexRadius = 6;
+                    var hexPad = 100;
+                    var hexbin = d3_hexbin.hexbin();
+                    var layout = hexbin.radius(hexRadius);
+                    // var layout = d3.hexbin().radius(hexRadius);
+                    var rscale = d3.scale.sqrt().range([0, hexRadius]).clamp(true);
+                    var cscale = d3.scale.linear().domain([0, 20]).range(["#00FF00", "#FFA500"]);
+
+
+                    function hexbinStyle(hexagons) {
+                        hexagons
+                            .attr("stroke", "rgba(0,0,0,0.5)")
+                            .attr("stroke-width", "0.2px")
+                            .attr("opacity", "0.75")
+                            .attr("fill", function (d) {
+                                var avg = d3.median(d, function (d) {
+                                    // console.log(d);
+                                    //console.log(+d[2].value[3][0]);
+                                    //return +d[2].value[3][0];
+                                    return 25;
+                                    // return +d[2].o3;
+                                });
+                                console.log(cscale(avg));
+                                return cscale(avg);
+                            });
+                    }
+
+                    function genHexagons(container) {
+                        // console.log("gen");
+                        var hexData = d3.entries(data).map(function (d) {
+                            var latlng = new google.maps.LatLng(d.value[1], d.value[0]);
+                            var px = projection.fromLatLngToDivPixel(latlng);
+                            return [px.x, px.y, d];
+                        }, this);
+
+                        var bins = layout(hexData);
+                        var hexagons = container.selectAll(".hexagon").data(bins);
+
+                        var counts = [];
+                        bins.map(function (elem) { counts.push(elem.length); });
+
+                        rscale.domain([0, (d3.mean(counts) + (d3.deviation(counts) * 3))]);
+
+                        var path = hexagons.enter().append("path").attr("class", "hexagon");
+                        hexbinStyle.call(this, path);
+
+                        hexagons
+                            .attr("d", function (d) {
+                                return layout.hexagon(hexRadius);
+                            })
+                            .attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });
+                    }
+
+                    var zoom = map.getZoom();
+                    var bounds = new google.maps.LatLngBounds();
+                    d3.entries(data).map(function (d) {
+                        console.log(d.value);
+                        console.log(d.value[1]);
+                        var latlng = new google.maps.LatLng(d.value[1], d.value[0]);
+                        bounds.extend(latlng);
+                        console.log("latlng");
+                        console.log(latlng);
+                    });
+
+                    var topRight = projection.fromLatLngToDivPixel(bounds.getNorthEast());
+                    var bottomLeft = projection.fromLatLngToDivPixel(bounds.getSouthWest());
+
+                    var sizeX = topRight.x - bottomLeft.x;
+                    var sizeY = bottomLeft.y - topRight.y;
+
+                    svg.attr('width', sizeX + (2 * hexPad))
+                        .attr('height', sizeY + (2 * hexPad))
+                        .style("margin-left", (bottomLeft.x - hexPad) + "px")
+                        .style("margin-top", (topRight.y - hexPad) + "px");
+
+                    if (!(zoom in levels)) {
+                        levels[zoom] = svg.append("g").attr("class", "zoom-" + zoom);
+                        genHexagons(levels[zoom]);
+                        levels[zoom].attr("transform", "translate(" + -(bottomLeft.x - hexPad) + "," + -(topRight.y - hexPad) + ")");
+                    }
+                    if (curLevel) {
+                        curLevel.style("display", "none");
+                    }
+                    curLevel = levels[zoom];
+                    curLevel.style("display", "inline");
+
+                };
+            };
+
+            // Bind our overlay to the map…
+            overlay.setMap(map);
+        });
+    </script>
 </body>
 
 </html>
