@@ -1,6 +1,6 @@
 # wanderwell-ui
 
-Data visualization, made with d3.js and Google Maps.
+Data visualization, made with Google Maps.
 
 To host a local copy, run:
 
